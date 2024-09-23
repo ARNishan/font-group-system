@@ -1,42 +1,42 @@
-$(document).ready(function () {
-    let uploadedFonts = [];
-    let fontGroups = []; // Store font groups for editing purposes
+$(document).ready(function() {
+            let uploadedFonts = [];
+            let fontGroups = [];
 
-    // Handle font upload
-    $('#font-upload').on('change', function () {
-        console.log('test');
-        var formData = new FormData();
-        formData.append('font-file', this.files[0]);
+            // Handle font upload
+            $('#font-upload').on('change', function() {
+                console.log('test');
+                var formData = new FormData();
+                formData.append('font-file', this.files[0]);
 
-        $.ajax({
-            url: 'api/index.php',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            success: function (response) {
-                console.log(response);
-                if (response.error) {
-                    $('#font-error').text(response.error).show();
-                } else {
-                    $('#font-error').hide();
-                    addFontToList(response.fontName, response.fontUrl);
-                    uploadedFonts.push(response.fontName); // Add font to the list
-                    populateFontSelects(); // Refresh the font dropdowns
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.log(textStatus);
-            }
-        });
+                $.ajax({
+                    url: 'api/index.php',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log(response);
+                        if (response.status === false) {
+                            $('#font-error').text(response.error).show();
+                        } else {
+                            $('#font-error').hide();
+                            addFontToList(response.data.fontName, response.data.fontUrl);
+                            uploadedFonts.push(response.data.fontName); // Add font to the list
+                            populateFontSelects(); // Refresh the font dropdowns
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus);
+                    }
+                });
 
-        $('#font-upload').val(''); // Reset the file input
-    });
+                $('#font-upload').val(''); // Reset the file input
+            });
 
-    // Add uploaded font to the list
-    function addFontToList(fontName, fontUrl) {
-        var fontRow = `
+            // Add uploaded font to the list
+            function addFontToList(fontName, fontUrl) {
+                var fontRow = `
             <tr data-font-url="${fontUrl}">
                 <td>${fontName}</td>
                 <td style="font-family: '${fontName}';">Example Text</td>
@@ -45,40 +45,46 @@ $(document).ready(function () {
                 </td>
             </tr>
         `;
-        $('#font-list').append(fontRow);
-    }
-
-    // Delete font from list and dropdown
-    $(document).on('click', '.delete-font', function () {
-        var fontUrl = $(this).data('font-url');
-        var fontName = $(this).data('font-name');
-        var row = $(this).closest('tr');
-
-        $.ajax({
-            url: 'api/index.php',
-            type: 'POST',
-            data: { fontUrl: fontUrl },
-            success: function (response) {
-                row.remove();
-                uploadedFonts = uploadedFonts.filter(font => font !== fontName);
-                populateFontSelects();
+                $('#font-list').append(fontRow);
             }
-        });
-    });
 
-    // Populate font dropdowns
-    function populateFontSelects() {
-        $('.font-select').each(function () {
-            $(this).html('<option value="">Select Font</option>');
-            uploadedFonts.forEach(font => {
-                $(this).append(`<option value="${font}">${font}</option>`);
+            // Delete font from list and dropdown
+            $(document).on('click', '.delete-font', function() {
+                var fontUrl = $(this).data('font-url');
+                var fontName = $(this).data('font-name');
+                var row = $(this).closest('tr');
+
+                $.ajax({
+                    url: 'api/index.php',
+                    type: 'POST',
+                    data: { fontUrl: fontUrl },
+                    success: function(response) {
+                        console.log(response);
+                        if (response.status === false) {
+                            $('#font-error').text(response.message).show();
+                        }else{
+                            row.remove();
+                            uploadedFonts = uploadedFonts.filter(font => font !== fontName);
+                            populateFontSelects();
+                        }
+                        
+                    }
+                });
             });
-        });
-    }
 
-    // Add new row for font group
-    $('#add-row').on('click', function () {
-        const newRow = `
+            // Populate font dropdowns
+            function populateFontSelects() {
+                $('.font-select').each(function() {
+                    $(this).html('<option value="">Select Font</option>');
+                    uploadedFonts.forEach(font => {
+                        $(this).append(`<option value="${font}">${font}</option>`);
+                    });
+                });
+            }
+
+            // Add new row for font group
+            $('#add-row').on('click', function() {
+                        const newRow = `
             <div class="row mb-3 font-row">
                 <div class="col-md-3">
                     <label>Font Name</label>
@@ -108,38 +114,56 @@ $(document).ready(function () {
         $(this).closest('.font-row').remove();
     });
 
-    // Handle font group submission (Create New Group)
     $('#font-group-form').on('submit', function (e) {
         e.preventDefault();
-
+    
         const groupName = $('#font-group-name').val().trim();
         const selectedFonts = $('select[name="fonts[]"]').map(function () {
             return $(this).val();
         }).get().filter(Boolean);
-
+    
+        // Validation: At least 2 fonts must be selected
         if (selectedFonts.length < 2) {
             alert('You must select at least two fonts.');
             return;
         }
-
+    
+        // Validation: Group name is required
         if (!groupName) {
             alert('Font group name is required.');
             return;
         }
-
+    
+        // Prepare data to send to API
         const groupData = {
-            groupName,
+            groupName: groupName,
             fonts: selectedFonts
         };
 
-        // Add group to the list and store it for editing purposes
-        fontGroups.push(groupData);
-        addFontGroupToList(fontGroups.length - 1, groupData);
-
-        // Reset form after submission
-        $('#font-group-form')[0].reset();
-        $('#font-group-container').find('.font-row:not(:first)').remove();
+    
+        // Make API call to save font group
+        $.ajax({
+            url: 'api/index.php',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(groupData),
+            success: function(response) {
+                console.log(response);
+                if (!response.status) {
+                    alert(response.message);
+                }else{
+                    alert('Font group added successfully!');
+                    fontGroups.push(groupData);
+                    addFontGroupToList(fontGroups.length - 1, groupData);
+                    // Reset form after submission
+                    $('#font-group-form')[0].reset();
+                    $('#font-group-container').find('.font-row:not(:first)').remove();
+                }
+                
+            }
+        });
     });
+    
 
     // Function to display created font groups
     function addFontGroupToList(groupIndex, groupData) {
@@ -171,7 +195,6 @@ $(document).ready(function () {
         // Re-render the table
         renderFontGroups();
 
-        // Optional: Delete from the database via an AJAX request
     });
 
     // Edit a font group
