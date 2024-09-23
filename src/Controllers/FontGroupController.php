@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Services\FontGroupService;
 use App\Validators\FontGroupValidator;
-
+use Exception;
 class FontGroupController
 {
     private $fontGroupService;
@@ -16,11 +16,19 @@ class FontGroupController
 
     public function store($data): array 
     {
-        // Validate the input
-        if (!FontGroupValidator::validate($data)) {
-            return ['status' => false, 'message' => 'Invalid request'];
+        try{
+            // Validate the input
+            if (!FontGroupValidator::validate($data)) {
+                return ['status' => false, 'message' => 'Invalid request'];
+            }
+            return $this->fontGroupService->createFontGroup($data);
+
+        } catch (Exception $e) {
+            return [
+                'status' => false,
+                'message' => 'Error saving font group: ' . $e->getMessage()
+            ];
         }
-        return $this->fontGroupService->createFontGroup($data);
     }
 
 }

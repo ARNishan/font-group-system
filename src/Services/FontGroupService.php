@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\FontGroup;
 use App\Repositories\Interfaces\FontGroupRepositoryInterface;
-
+use Exception;
 class FontGroupService
 {
     private $repository;
@@ -16,7 +16,15 @@ class FontGroupService
 
     public function createFontGroup(array $data): array
     {
-        $fontGroup = new FontGroup($data['groupName'], $data['fonts']);
-        return $this->repository->save($fontGroup);
+        try{
+            $fontGroup = new FontGroup($data['groupName'], $data['fonts']);
+            return $this->repository->save($fontGroup);
+        }catch (Exception $e) {
+            return [
+                'status' => false,
+                'message' =>  $e->getMessage()
+            ];
+        }
+        
     }
 }

@@ -15,15 +15,21 @@ class FontGroupRepository implements FontGroupRepositoryInterface
 
     public function save(FontGroup $fontGroup): array
     {
-        $existingData = $this->getDataFromFile();
-
-        $existingData[] = [
-            'group_name' => $fontGroup->group_name,
-            'fonts' => $fontGroup->fonts,
-            'font_count' => $fontGroup->font_count
-        ];
-
-        return $this->saveDataToFile($existingData);
+        try{
+            $existingData = $this->getDataFromFile();   
+            $existingData[] = [
+                'group_name' => $fontGroup->group_name,
+                'fonts' => $fontGroup->fonts,
+                'font_count' => $fontGroup->font_count
+            ];
+            return $this->saveDataToFile($existingData);
+        }catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' =>  $e->getMessage()
+            ];
+        }
+        
     }
 
     private function getDataFromFile(): array
@@ -37,10 +43,19 @@ class FontGroupRepository implements FontGroupRepositoryInterface
 
     private function saveDataToFile(array $data): array
     {
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
-        if(file_put_contents($this->filePath, $jsonData)){
-            return ['status' => true,'message' => 'Font group created successfully'];
+        try{
+            $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+            if(file_put_contents($this->filePath, $jsonData)){
+                return ['status' => true,'message' => 'Font group created successfully'];
+            }
+            return ['status' => false,'message' => 'Failed to create font group'];
+
+        }catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' =>  $e->getMessage()
+            ];
         }
-        return ['status' => false,'message' => 'Failed to create font group'];
+        
     }
 }

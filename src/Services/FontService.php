@@ -19,17 +19,31 @@ class FontService
 
     public function handleUpload($file): array
     {
-        if (!$this->validator->isValid($file)) {
-            return ['error' => 'Invalid file type. Only TTF files are allowed.'];
+        try{
+            if (!$this->validator->isValid($file)) {
+                return ['error' => 'Invalid file type. Only TTF files are allowed.'];
+            }
+            $font = new Font(basename($file["name"]), $file["tmp_name"]);
+            return $this->repository->upload($font);
+        }catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' =>  $e->getMessage()
+            ];
         }
-
-        $font = new Font(basename($file["name"]), $file["tmp_name"]);
-
-        return $this->repository->upload($font);
+        
     }
 
     public function handleDelete($fontUrl): array
     {
-        return $this->repository->delete($fontUrl);
+        try{
+            return $this->repository->delete($fontUrl);
+        }catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' =>  $e->getMessage()
+            ];
+        }
+        
     }
 }
