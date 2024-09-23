@@ -1,14 +1,32 @@
 # Font Group System
 
-## Project Overview
-This project allows users to upload TTF fonts and create groups of fonts dynamically. It uses Core PHP and JavaScript for a seamless experience.
+## Getting started
 
-## How to Run the Project
+### Installation
 
-### Step 1: Clone the Repository
-Clone this repository to your local machine.
+Please ensure your server meets the required PHP configurations before you start. You can check the official PHP installation guide for server requirements. [Official Documentation](https://www.php.net/manual/en/install.php)
 
-```bash
-git clone <repository-url>
+Clone the repository
+
+    git clone https://github.com/ARNishan/font-group-system.git
+
+Switch to the repo folder
+
+    cd font-group-system
+
+Install all the dependencies using composer
+
+    composer install
+
+Make sure you have the `storage/` directories created in the root folder, as they are required for font uploads and data storage.
+
+
+## Running the Project
+
+Start your local PHP development server
+
+    php -S localhost:8000
+
+You can now access the project at `http://localhost:8000`
 
 
